@@ -1,0 +1,138 @@
+# Week 3 Assignment - Time Series Analysis.
+# Predictive Analytics
+# Name - Nainil Patel
+
+
+# We will install all the necessary library forecast will be used for the forecasting the test result. Reshape2 is neccesary for the paste function which will be used for extratcing all the 22 unique combination as a dataframe
+library(forecast)
+library(gtrendsR)
+library(reshape2)
+library(ggplot2)
+
+#Extracting the data and gettting the summary report for the data
+#setwd("/Users/nainilpatel/Desktop")
+tv <- read.csv("tv_data.csv", sep = ",")
+tv
+summary(tv)
+
+# Splits the whole data into a 22 list, which is a list of unique combination of daypart and network provider. In-total 22 list will be created each list will be created based on a unique conbination of daypart and network for every year available in data
+data <- split(tv, list(tv3$daypart, tv3$network), drop=1)
+data
+
+
+# This for loop will run through the list "data" that is created and will extract 22 different tables. This table will be used for each timeseries analyis. So 22 different tables will be created. Each data will be combination of unique daypart and netwrok
+count = 0
+for (i in 1:length(data)){
+  count = count +1
+  assign(paste("table",i, sep =""),as.data.frame(data[i]))
+}
+
+# Creating a function. We will include our main implementation in this function follows as:
+# Firstly we will create a function and pass a parameter name tab. Then we will create a timeseries for the tab, which is a single dataframe that we have created in the for loop. We will use Season decomposition which will display the trends. Then will split the data into trainin and test set, and then pass the training data to ACF(Autocorelatio) and PACF (Partial Autocorelation) and will see the order of model for each of 22 data frame. Then we will fit the model using HoltWinters and as data we will pass the training data (for modeling we always use training data). Then using the package forecast will forecast for the next 12 months. Then we will print the predicted value for each of the next 12 months that we have forecasted. We will calculate the mean averave error (mae) and print the value for each of 22 dataframe.
+
+timeseries <- function(tab){
+  
+colnames(tab)[4] <- "views"
+ts <- ts(tab$views, start  = c(2014, 01), frequency = 12)
+ts.plot(ts)
+
+stl <- stl(ts, s.window = 12)
+plot(stl, col= "blue")
+training<- ts(tab$views, start = c(2014, 01), end = c(2016, 12), frequency = 12)
+test <- ts(tab$views, start = c(2017, 01), end = c(2017, 12), frequency = 12)
+
+ACF <- acf(training, ylim = c(-0.1,2), col="red", main="ACF Decomposition")
+PAFC <- pacf(training, ylim = c(-0.1,2), col="blue", main= "PACF Decomposition")
+
+
+fit = HoltWinters(training, alpha = 0.5)
+forecast <- forecast(fit, 12)
+plot(forecast, main = "")
+lines(test, col = "red")
+
+#Test prediction
+p_test <- predict(fit, n.ahead=12)
+print(p_test)
+
+# For calculating Mean average error we need to convert the class of timeseries to integer
+p_num <- as.numeric(p_test)
+p_num
+act_test <- as.numeric(test)
+act_test
+
+#MAE Calculation
+MAE <- function(error){
+  return(mean(abs(error)))
+}
+meanValue<-MAE(p_num - test)
+print(meanValue)
+}
+
+# We will call each dataframe with the function we created,
+
+# For timeseries one the order of model for acf = 4 and pacf = 1 and trend shows a downward steep after 2017 and views between 150 to 130 for 2018 in a decreasing order
+timeseries(table1)
+
+# For timeseries one the order of model for acf = 3 and pacf = 1 and trend shows a downward steep after 2017 and views between 150 to 90 for 2018 in a decreasing order
+timeseries(table2)
+
+# For timeseries one the order of model for acf is = 4 and pacf = 1 and trend shows a forecast of view between 175 to 160 for 2018 in a decreasing order
+timeseries(table3)
+
+# For timeseries one the order of model for acf is = 4 and pacf = 1 and trend shows a forecast with views between 80 to 90 for 2018 in a decreasing order
+timeseries(table4)
+
+# For timeseries one the order of model for acf is = 4 and pacf = 1 and trend shows a forecast with views between 220 and 250 for 2018 in a decreasing order
+timeseries(table5)
+
+# For timeseries one the order of model for acf is = 4 and pacf = 1 and trend shows a forecast with views between 150 and 190 for 2018 in a decreasing order
+timeseries(table6)
+
+# For timeseries one the order of model for acf is = 4 and pacf = 1 and trend shows a forecast with views between 350 and 250 for 2018 in a decreasing order
+timeseries(table7)
+
+# For timeseries one the order of model for acf is = 4 and pacf = 1 and trend shows a forecast with views between 550 and 450 for 2018 in a decreasing order
+timeseries(table8)
+
+# For timeseries one the order of model for acf is = 3 and pacf = 1 and trend shows a forecast with views between 280 and 230 for 2018 in a decreasing order
+timeseries(table9)
+
+# For timeseries one the order of model for acf is = 4 and pacf = 1 and trend shows a forecast with views between 100 and 70 for 2018 in a decreasing order
+timeseries(table10)
+
+# For timeseries one the order of model for acf is = 4 and pacf = 1 and trend shows a forecast with views between 180 and 150 for 2018 in a decreasing order
+timeseries(table11)
+
+# For timeseries one the order of model for acf is = 2 and pacf = 1 and trend shows a forecast with views between 330 and 310 for 2018 in a decreasing order
+timeseries(table12)
+
+# For timeseries one the order of model for acf is = 2 and pacf = 1 and trend shows a forecast with views between 260 and 280 for 2018 in an increasing order
+timeseries(table13)
+
+# For timeseries one the order of model for acf is = 2 and pacf = 1 and trend shows a forecast with views between 400 and 350 for 2018 in a decreasing order
+timeseries(table14)
+
+# For timeseries one the order of model for acf is = 6 and pacf = 1 and trend shows a forecast with views between 160 to 200 for 2018 in an increasing order
+timeseries(table15)
+
+# For timeseries one the order of model for acf is = 2 and pacf = 1 and trend shows a forecast with views between 550 and 450 for 2018 in a decreasing order
+timeseries(table16)
+
+# For timeseries one the order of model for acf is = 2 and pacf = 1 and trend shows a forecast with views between 320 and 280 for 2018 in a decreasing order
+timeseries(table17)
+
+# For timeseries one the order of model for acf is = 2 and pacf = 1 and trend shows a forecast with views between 550 and 450 for 2018 in a decreasing order
+timeseries(table18)
+
+# For timeseries one the order of model for acf is = 2 and pacf = 1 and trend shows a forecast with views between 1000 and 880 for 2018 in a decreasing order
+timeseries(table19)
+
+# For timeseries one the order of model for acf is = 3 and pacf = 2 and trend shows a forecast with views between 550 and 530 for 2018 in a decreasing order
+timeseries(table20)
+
+# For this timeseries we are not getting the acf and pacf as the number of views is 0 for every entry.
+timeseries(table21)
+
+# For timeseries one the order of model for acf is = 2 and pacf = 1 and trend shows a forecast with views between 330 and 310 for 2018 in a decreasing order
+timeseries(table12)
+
